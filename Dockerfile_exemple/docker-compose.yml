@@ -1,0 +1,15 @@
+version: "3"
+services:
+  wiki_app:
+    build: wiki_app
+    image: wiki_app:1.0
+    ports:
+      - "8000-8010:80"
+    deploy:
+      replicas: 3
+  wiki_db:
+    build: wiki_db
+    image: wiki_db:1.0
+    environment:
+    - MARIADB_ROOT_PASSWORD="secret"
+
