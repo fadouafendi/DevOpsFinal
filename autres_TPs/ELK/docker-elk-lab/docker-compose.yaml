@@ -1,0 +1,49 @@
+version: '3'
+services:
+
+  nginx:
+    image: nginx:1.15.8-alpine
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - logs:/var/log/nginx
+
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:6.5.4
+    volumes:
+      - ./filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml
+      - logs:/var/log/nginx
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:6.5.4
+    ports:
+      # Beats
+      - "5044:5044"
+      # API
+      - "9600:9600"
+    volumes:
+      - ./logstash/logstash.conf:/usr/share/logstash/pipeline/logstash.conf
+
+  elasticsearch:
+    environment:
+      - cluster.name=logging
+      - node.name=default
+      - discovery.type=single-node
+    image: docker.elastic.co/elasticsearch/elasticsearch:6.5.4
+    ports:
+     - "9200:9200"
+    volumes:
+      - elasticsearch:/usr/share/elasticsearch/data
+
+  kibana:
+    environment:
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
+    image: docker.elastic.co/kibana/kibana:6.5.4
+    ports:
+     - "5601:5601"
+
+volumes:
+  elasticsearch:
+  logs:

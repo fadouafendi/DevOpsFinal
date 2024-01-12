@@ -1,0 +1,89 @@
+version: '3.3'
+services:
+   app:
+     image: wiki_app:1.0
+     build: ./app
+     hostname: wiki_web
+     container_name: wiki_web
+     ports:
+       - "8000:80"
+     volumes:
+       - nginx-vol:/usr/share/nginx/wiki
+       - logs:/var/log/nginx
+     networks:
+        wiki-net:
+           ipv4_address: 10.10.10.2
+
+   db:
+     image: wiki_db:1.0
+     build: ./db
+     hostname: wiki_db
+     container_name: wiki_db
+     volumes:
+       - logs_db:/logdb
+     ports:
+       - "33066:3306"     
+     networks:
+        wiki-net:
+           ipv4_address: 10.10.10.3
+
+           #  filebeat:
+           #  image: docker.elastic.co/beats/filebeat:6.5.4
+           # volumes:
+           #- ./filebeat:/usr/share/filebeat
+           #- logs:/lognginx
+           #- logs_db:/logdb
+           #networks:
+           #wiki-net:
+           #ipv4_address: 10.10.10.4
+
+   logstash:
+     image: logstash:7.10.1
+     ports:
+       # Beats
+       - "5044:5044"
+       # API
+       - "9600:9600"
+     volumes:
+       - ./logstash:/usr/share/logstash/conf
+       - logs:/lognginx
+       - logs_db:/logdb
+
+     networks:
+        wiki-net:
+           ipv4_address: 10.10.10.5
+ 
+   elasticsearch:
+     environment:
+       - cluster.name=logging
+       - node.name=default
+       - discovery.type=single-node
+     image: elasticsearch:7.10.1
+     ports:
+      - "9200:9200"
+     volumes:
+       - elasticsearch:/usr/share/elasticsearch/data
+     networks:
+        wiki-net:
+           ipv4_address: 10.10.10.6
+
+   kibana:
+     environment:
+       - ELASTICSEARCH_URL=http://10.10.10.6:9200
+     image: kibana:7.10.1
+     ports:
+      - "5601:5601"
+     networks:
+        wiki-net:
+           ipv4_address: 10.10.10.7
+
+volumes:
+         nginx-vol:
+         logs:
+         logs_db:
+         elasticsearch:
+networks:
+         wiki-net:
+           ipam:
+             config:
+               - subnet: 10.10.10.0/28

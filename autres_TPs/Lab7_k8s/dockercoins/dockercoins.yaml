@@ -1,0 +1,147 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: worker
+spec:
+#  replicas: 3
+  selector:
+    matchLabels:
+      app: dockercoins
+      tier: worker
+  template:
+    metadata:
+      labels:
+        app: dockercoins
+        tier: worker
+    spec:
+      containers:
+      - name: worker
+        image: brahimhamdi/worker
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rng
+spec:
+  selector:
+    matchLabels:
+      app: dockercoins
+      tier: rng
+  template:
+    metadata:
+      labels:
+        app: dockercoins
+        tier: rng
+    spec:
+      containers:
+      - name: rng
+        image: brahimhamdi/rng
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rng
+spec:
+  selector:
+    app: dockercoins
+    tier: rng
+  ports:
+    - port: 80
+      targetPort: 80
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hasher
+spec:
+  selector:
+    matchLabels:
+      app: dockercoins
+      tier: hasher
+  template:
+    metadata:
+      labels:
+        app: dockercoins
+        tier: hasher
+    spec:
+      containers:
+      - name: hasher
+        image: brahimhamdi/hasher
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hasher
+spec:
+  selector:
+    app: dockercoins
+    tier: hasher
+  ports:
+    - port: 80
+      targetPort: 80
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+spec:
+  selector:
+    matchLabels:
+      app: dockercoins
+      tier: redis
+  template:
+    metadata:
+      labels:
+        app: dockercoins
+        tier: redis
+    spec:
+      containers:
+      - name: redis
+        image: redis
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+spec:
+  selector:
+    app: dockercoins
+    tier: redis
+  ports:
+    - port: 6379
+      targetPort: 6379
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webui
+spec:
+  selector:
+    matchLabels:
+      app: dockercoins
+      tier: webui
+  template:
+    metadata:
+      labels:
+        app: dockercoins
+        tier: webui
+    spec:
+      containers:
+      - name: webui
+        image: brahimhamdi/webui
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: webui
+spec:
+  selector:
+    app: dockercoins
+    tier: webui
+  type: NodePort
+  ports:
+    - port: 80
+      targetPort: 80
+      nodePort: 30001
+
+
